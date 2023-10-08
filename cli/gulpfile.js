@@ -39,14 +39,24 @@ if (customPaths) {
 const clean = () => del([paths.dist + '/*']);
 
 const script = ({src, name, mode}, done = _ => true) => {
-
+    let customWebpackOptions = {};
+    try {
+        const { join } = require('node:path');
+        customWebpackOptions = require(join(process.cwd(), 'webpack.config.js'));
+    } catch (e) {
+        console.log("No custom webpack options found.");
+    }
+    
     const webpackOptions = {
         // use mode if specified explicitly; otherwise choose by --env
         mode: mode || (isProd ? 'production' : 'development'),
         // match sourcemap name with configured js file name
         output: {filename: `${name}.js`},
         // use source map with dev builds only
-        devtool: isProd ? undefined : 'cheap-source-map'
+        devtool: isProd ? undefined : 'cheap-source-map',
+
+        // merge any configured extensions
+        ...customWebpackOptions,
     };
 
     return gulp.src(src)
